@@ -1,0 +1,93 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: openstack-client
+spec:
+  replicas: 1
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        application: openstack
+        component: client
+        name: openstack-client
+    spec:
+      containers:
+      - command:
+        - "/bin/sh"
+        - "-c"
+        - "while true; do echo hello; sleep 10;done"
+        env:
+        - name: OS_IDENTITY_API_VERSION
+          value: "3"
+        - name: OS_AUTH_URL
+          valueFrom:
+            secretKeyRef:
+              key: OS_AUTH_URL
+              name: glance-keystone-admin
+        - name: OS_REGION_NAME
+          valueFrom:
+            secretKeyRef:
+              key: OS_REGION_NAME
+              name: glance-keystone-admin
+        - name: OS_PROJECT_DOMAIN_NAME
+          valueFrom:
+            secretKeyRef:
+              key: OS_PROJECT_DOMAIN_NAME
+              name: glance-keystone-admin
+        - name: OS_PROJECT_NAME
+          valueFrom:
+            secretKeyRef:
+              key: OS_PROJECT_NAME
+              name: glance-keystone-admin
+        - name: OS_USER_DOMAIN_NAME
+          valueFrom:
+            secretKeyRef:
+              key: OS_USER_DOMAIN_NAME
+              name: glance-keystone-admin
+        - name: OS_USERNAME
+          valueFrom:
+            secretKeyRef:
+              key: OS_USERNAME
+              name: glance-keystone-admin
+        - name: OS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: OS_PASSWORD
+              name: glance-keystone-admin
+        image: docker.io/kolla/ubuntu-source-heat-engine:3.0.3
+        imagePullPolicy: IfNotPresent
+        name: openstack-client
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /tmp/images
+          name: imagedir
+        - mountPath: /tmp/bootstrap.sh
+          name: glance-bin
+          readOnly: true
+          subPath: bootstrap.sh
+        - mountPath: /etc/glance/glance-api.conf
+          name: glance-etc
+          readOnly: true
+          subPath: glance-api.conf
+      dnsPolicy: ClusterFirst
+      nodeSelector:
+        openstack-control-plane: enabled
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - emptyDir:
+          sizeLimit: "0"
+        name: imagedir
+      - configMap:
+          defaultMode: 365
+          name: glance-bin
+        name: glance-bin
+      - configMap:
+          defaultMode: 292
+          name: glance-etc
+        name: glance-etc

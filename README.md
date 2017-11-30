@@ -1,1 +1,1 @@
-# opencontrail-upgrade-demo
+OpenContrail upgrade demo
